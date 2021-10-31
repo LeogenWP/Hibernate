@@ -124,8 +124,104 @@ public class RankingTest {
         try(Session session = factory.openSession()) {
             Transaction tx = session.beginTransaction();
             Query<Ranking> query = session.createQuery(
+                "from Ranking r "
+                    + "where r.subject.name=:name "
+                    + "and r.skill.name=:skill",Ranking.class
+            );
+            query.setParameter("name",subject);
+            query.setParameter("skill",skill);
 
-            )
+            IntSummaryStatistics stats = query.list()
+                    .stream()
+                    .collect(
+                            Collectors.summarizingInt(Ranking::getRanking)
+                    );
+            int average = (int) stats.getAverage();
+            tx.commit();
+            return average;
         }
     }
+
+    private void populateRankingData() {
+        try (Session session = factory.openSession()) {
+            Transaction tx = session.beginTransaction();
+            createData(session,"J. C. Smell","Gene Showrama", "Java",6);
+            createData(session,"J. C. Smell","Scottball Most", "Java",7);
+            createData(session,"J. C. Smell","Drew Lombardo", "Java",8);
+            tx.commit();
+        }
+    }
+
+    private void createData(Session session, String subjectName, String observerName,
+                            String skillName,int rank) {
+        Person subject = savePerson(session,subjectName);
+        Person observer = savePerson(session,observerName);
+        Skill skill = saveSkill(session,skillName);
+
+        Ranking ranking = new Ranking();
+        ranking.setSubject(subject);
+        ranking.setObserver(observer);
+        ranking.setSkill(skill);
+        ranking.setRanking(rank);
+        session.save(ranking);
+    }
+
+    private Person findPerson(Session session, String name) {
+        Query<Person> query = session.createQuery(
+                "from Person p where p.name=:name",Person.class
+        );
+        query.setParameter("name",name);
+        Person person = query.uniqueResult();
+        return person;
+    }
+
+    private Skill findSkill(Session session, String name) {
+        Query<Skill> query = session.createQuery(
+                "from Skill p where p.name=:name",Skill.class
+        );
+        query.setParameter("name",name);
+        Skill skill = query.uniqueResult();
+        return skill;
+    }
+
+    private Skill saveSkill(Session session, String skillName) {
+
+        Skill skill = findSkill(session,skillName);
+        if (skill ==null) {
+            skill = new Skill();
+            skill.setName(skillName);
+            session.save(skill);
+        }
+        return skill;
+    }
+
+    private Person savePerson(Session session, String name) {
+        Person person= findPerson(session,name);
+        if(person == null) {
+            person = new Person();
+            person.setName(name);
+            session.save(person);
+        }
+        return person;
+    }
+
+    private Ranking findRanking(Session session
+                                ,String subject
+                                ,String observer
+                                ,String skill
+                                ) {
+            Query<Ranking> query = session.createQuery(
+                    "from Ranking r "
+                            + "where r.subject.name=:subject and "
+                            + "r.observer.name=:observer and "
+                            + "r.skill.name=:skill",Ranking.class
+            );
+            query.setParameter("subject",subject);
+            query.setParameter("observer",observer);
+            query.setParameter("skill",skill);
+            Ranking ranking = query.uniqueResult();
+            return ranking;
+    }
+
+
 }

@@ -14,5 +14,8 @@
         <property name="hbm2ddl.auto">create-drop</property>
 
         <mapping class="com.leogen.hibernate.chapter01.pojo.Message"/>
+        <mapping class="com.leogen.hibernate.chapter03.pojo.Person"/>
+        <mapping class="com.leogen.hibernate.chapter03.pojo.Ranking"/>
+        <mapping class="com.leogen.hibernate.chapter03.pojo.Skill"/>
     </session-factory>
 </hibernate-configuration>
